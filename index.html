@@ -1,0 +1,1539 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Alex Clone Web - Doomsday</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000000;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            padding: 6px;
+            color: #e0e6ed;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(5, 8, 18, 0.98);
+            border-radius: 12px;
+            padding: 12px 14px;
+            border: 1px solid rgba(255,0,0,0.06);
+            box-shadow: 0 0 60px rgba(255,0,0,0.03);
+        }
+
+        /* POPUP STYLES */
+        .popup-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(10px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: popup-fade 0.5s ease;
+        }
+        @keyframes popup-fade {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .popup-box {
+            background: linear-gradient(135deg, #0a0a1a, #1a0a0a);
+            border: 2px solid rgba(255,0,0,0.3);
+            border-radius: 16px;
+            padding: 30px 35px;
+            max-width: 550px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 0 80px rgba(255,0,0,0.15);
+        }
+        .popup-box::-webkit-scrollbar { width: 3px; }
+        .popup-box::-webkit-scrollbar-thumb { background: #ff0000; border-radius: 10px; }
+        .popup-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        .popup-icon {
+            font-size: 2rem;
+            animation: popup-icon-pulse 1.5s infinite;
+        }
+        @keyframes popup-icon-pulse {
+            0%,100%{transform:scale(1)}
+            50%{transform:scale(1.2)}
+        }
+        .popup-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff0000, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .popup-subtitle {
+            color: #8899bb;
+            font-size: 0.75rem;
+            margin-top: -5px;
+            margin-bottom: 15px;
+        }
+        .popup-section {
+            background: rgba(255,0,0,0.04);
+            border-radius: 8px;
+            padding: 12px 14px;
+            margin: 8px 0;
+            border-left: 3px solid #ff0000;
+        }
+        .popup-section h4 {
+            color: #ff0000;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .popup-section p, .popup-section li {
+            font-size: 0.7rem;
+            color: #b0c4de;
+            line-height: 1.5;
+        }
+        .popup-section ul {
+            padding-left: 18px;
+            margin: 4px 0;
+        }
+        .popup-section ul li {
+            list-style: none;
+            padding: 2px 0;
+        }
+        .popup-section ul li::before {
+            content: "▸ ";
+            color: #ff0000;
+        }
+        .popup-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin: 8px 0;
+        }
+        .popup-badge {
+            background: rgba(255,0,0,0.08);
+            color: #ff6b6b;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.55rem;
+            font-weight: 600;
+            border: 1px solid rgba(255,0,0,0.1);
+        }
+        .popup-badge.green { background: rgba(0,212,170,0.08); color: #00d4aa; border-color: rgba(0,212,170,0.1); }
+        .popup-badge.gold { background: rgba(254,202,87,0.08); color: #feca57; border-color: rgba(254,202,87,0.1); }
+        .popup-badge.purple { background: rgba(102,126,234,0.08); color: #667eea; border-color: rgba(102,126,234,0.1); }
+        .popup-warning {
+            background: rgba(255,0,0,0.08);
+            border: 1px solid rgba(255,0,0,0.15);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin: 10px 0;
+            font-size: 0.65rem;
+            color: #ff6b6b;
+            text-align: center;
+        }
+        .popup-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            color: white;
+            margin-top: 10px;
+            transition: all .3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .popup-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 40px rgba(255,0,0,0.3);
+        }
+        .popup-steps {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin: 6px 0;
+        }
+        .popup-step {
+            background: rgba(255,255,255,0.03);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.6rem;
+            color: #8899bb;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.04);
+        }
+        .popup-step .num {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #ff0000;
+        }
+
+        /* MAIN STYLES */
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            flex-wrap: wrap; gap: 4px; margin-bottom: 8px;
+            padding-bottom: 6px; border-bottom: 1px solid rgba(255,0,0,0.06);
+        }
+        .logo { display: flex; align-items: center; gap: 5px; }
+        .logo-icon {
+            width: 30px; height: 30px;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 900; color: white;
+            box-shadow: 0 0 25px rgba(255,0,0,0.2);
+            animation: doomsday-glow 0.8s infinite;
+        }
+        @keyframes doomsday-glow {
+            0%,100%{box-shadow:0 0 15px rgba(255,0,0,0.2)}
+            50%{box-shadow:0 0 40px rgba(255,0,0,0.5)}
+        }
+        .logo h1 {
+            font-size: 1rem; font-weight: 800;
+            background: linear-gradient(135deg, #ff0000, #ff6b6b);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            animation: text-doomsday 1.5s infinite;
+        }
+        @keyframes text-doomsday {
+            0%,100%{filter:drop-shadow(0 0 5px rgba(255,0,0,0.2))}
+            50%{filter:drop-shadow(0 0 15px rgba(255,0,0,0.5))}
+        }
+        .logo .version {
+            font-size: 0.45rem; color: #ff0000;
+            background: rgba(255,0,0,0.12);
+            padding: 1px 6px; border-radius: 20px;
+            border: 1px solid rgba(255,0,0,0.15);
+        }
+        .badge-doomsday {
+            background: rgba(255,0,0,0.15);
+            color: #ff0000;
+            padding: 2px 8px; border-radius: 20px;
+            font-size: 0.55rem; font-weight: 700;
+            border: 1px solid rgba(255,0,0,0.2);
+            animation: badge-doomsday 0.6s infinite;
+        }
+        @keyframes badge-doomsday {
+            0%,100%{opacity:1;transform:scale(1)}
+            50%{opacity:0.7;transform:scale(0.92)}
+        }
+        .status-indicator {
+            display: flex; align-items: center; gap: 4px;
+            padding: 3px 8px;
+            background: rgba(255,0,0,0.04);
+            border-radius: 30px;
+            border: 1px solid rgba(255,0,0,0.06);
+        }
+        .status-dot {
+            width: 7px; height: 7px; border-radius: 50%; display: inline-block;
+        }
+        .status-dot.idle { background: #6c7a92; }
+        .status-dot.running { background: #ff0000; animation: dot-doomsday 0.4s infinite; }
+        .status-dot.done { background: #00d4aa; }
+        .status-dot.error { background: #ff0000; }
+        @keyframes dot-doomsday {
+            0%,100%{opacity:1;transform:scale(1)}
+            50%{opacity:0.4;transform:scale(0.5)}
+        }
+        .status-text { font-size: 0.65rem; font-weight: 500; color: #8899bb; }
+
+        .input-section {
+            display: flex; gap: 6px; margin: 6px 0; flex-wrap: wrap;
+        }
+        .input-section input {
+            flex: 1; padding: 8px 12px;
+            border: 2px solid rgba(255,0,0,0.08);
+            border-radius: 8px;
+            background: rgba(255,0,0,0.03);
+            color: #e0e6ed; font-size: 0.8rem;
+            transition: all .3s; min-width: 140px;
+        }
+        .input-section input:focus {
+            outline: none; border-color: #ff0000;
+            background: rgba(255,0,0,0.06);
+            box-shadow: 0 0 30px rgba(255,0,0,0.05);
+        }
+        .input-section input::placeholder { color: rgba(255,255,255,0.12); }
+        .btn {
+            padding: 8px 16px; border: none; border-radius: 8px;
+            font-size: 0.7rem; font-weight: 700; cursor: pointer;
+            transition: all .2s cubic-bezier(.4,0,.2,1);
+            display: inline-flex; align-items: center; gap: 4px;
+            text-transform: uppercase; letter-spacing: .3px;
+        }
+        .btn-doomsday {
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            color: white; 
+            box-shadow: 0 0 30px rgba(255,0,0,0.15);
+            animation: btn-doomsday 1s infinite;
+        }
+        @keyframes btn-doomsday {
+            0%,100%{box-shadow:0 0 15px rgba(255,0,0,0.15)}
+            50%{box-shadow:0 0 40px rgba(255,0,0,0.4)}
+        }
+        .btn-doomsday:hover:not(:disabled) {
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 0 60px rgba(255,0,0,0.5);
+        }
+        .btn-doomsday:disabled { opacity: .3; cursor: not-allowed; transform: none; }
+        .btn-success {
+            background: linear-gradient(135deg, #00b09b, #96c93d);
+            color: white;
+        }
+        .btn-success:hover:not(:disabled) { transform: translateY(-2px); }
+        .btn-success:disabled { opacity: .4; cursor: not-allowed; }
+        .btn-danger {
+            background: rgba(255,0,0,0.1);
+            color: #ff0000; border: 1px solid rgba(255,0,0,0.1);
+        }
+        .btn-danger:hover { background: rgba(255,0,0,0.18); }
+        .btn-warning {
+            background: rgba(254,202,87,0.1);
+            color: #feca57; border: 1px solid rgba(254,202,87,0.1);
+        }
+        .btn-warning:hover { background: rgba(254,202,87,0.18); }
+        .btn-purple {
+            background: rgba(102,126,234,0.1);
+            color: #667eea; border: 1px solid rgba(102,126,234,0.1);
+        }
+        .btn-purple:hover { background: rgba(102,126,234,0.18); }
+        .btn-partial {
+            background: rgba(0,212,170,0.1);
+            color: #00d4aa;
+            border: 1px solid rgba(0,212,170,0.15);
+        }
+        .btn-partial:hover { background: rgba(0,212,170,0.18); }
+        .btn-partial:disabled { opacity: .3; cursor: not-allowed; }
+
+        .stats-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(60px,1fr));
+            gap: 3px; margin: 4px 0; padding: 4px 6px;
+            background: rgba(255,0,0,0.02);
+            border-radius: 6px; border: 1px solid rgba(255,0,0,0.04);
+        }
+        .stat-item { text-align: center; }
+        .stat-item .number {
+            font-size: 0.9rem; font-weight: 700; color: #ff0000; line-height: 1.1;
+        }
+        .stat-item .number.green { color: #00d4aa; }
+        .stat-item .number.purple { color: #667eea; }
+        .stat-item .number.gold { color: #feca57; }
+        .stat-item .label {
+            font-size: 0.45rem; color: #6c7a92;
+            text-transform: uppercase; letter-spacing: .2px; margin-top: 0px;
+        }
+
+        .progress-wrap {
+            margin: 4px 0;
+            background: rgba(255,0,0,0.04);
+            border-radius: 4px; overflow: hidden; height: 14px; display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff0000, #cc0000);
+            transition: width .3s ease;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .5rem; font-weight: 600; color: white; width: 0%;
+        }
+
+        .attack-tools {
+            display: flex; gap: 3px; flex-wrap: wrap;
+            margin: 3px 0 4px 0; padding: 3px 6px;
+            background: rgba(255,0,0,0.03);
+            border-radius: 4px;
+            border: 1px solid rgba(255,0,0,0.04);
+        }
+        .attack-tag {
+            background: rgba(255,0,0,0.06);
+            color: #ff0000;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 0.5rem;
+            font-weight: 600;
+            border: 1px solid rgba(255,0,0,0.08);
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .attack-tag.green { background: rgba(0,212,170,0.06); color: #00d4aa; border-color: rgba(0,212,170,0.08); }
+        .attack-tag.purple { background: rgba(102,126,234,0.06); color: #667eea; border-color: rgba(102,126,234,0.08); }
+        .attack-tag.gold { background: rgba(254,202,87,0.06); color: #feca57; border-color: rgba(254,202,87,0.08); }
+
+        .options {
+            display: flex; gap: 4px; flex-wrap: wrap;
+            margin: 3px 0 4px 0; padding: 3px 6px;
+            background: rgba(255,255,255,0.01);
+            border-radius: 4px; border: 1px solid rgba(255,255,255,0.02);
+        }
+        .options label {
+            display: flex; align-items: center; gap: 2px;
+            font-size: .6rem; color: #8899bb; cursor: pointer;
+        }
+        .options input[type="checkbox"] {
+            width: 10px; height: 10px; accent-color: #ff0000; cursor: pointer;
+        }
+
+        .live-log {
+            background: rgba(0,0,0,0.6);
+            border-radius: 6px; padding: 4px 6px;
+            max-height: 180px; overflow-y: auto;
+            margin: 4px 0;
+            border: 1px solid rgba(255,0,0,0.04);
+            font-family: 'Consolas','Courier New',monospace;
+            font-size: .58rem; line-height: 1.3;
+        }
+        .live-log::-webkit-scrollbar { width: 2px; }
+        .live-log::-webkit-scrollbar-track { background: rgba(255,255,255,0.01); }
+        .live-log::-webkit-scrollbar-thumb { background: #ff0000; border-radius: 10px; }
+        .log-line { padding: 1px 0; border-bottom: 1px solid rgba(255,0,0,0.015); animation: fadeIn .08s ease; }
+        @keyframes fadeIn { from{opacity:0;transform:translateX(-2px)} to{opacity:1;transform:translateX(0)} }
+        .log-line .time { color: #4a5a72; margin-right: 4px; font-size: .5rem; }
+        .log-line .status { display:inline-block; padding:0 3px; border-radius:2px; font-weight:600; font-size:.5rem; margin-right:2px; }
+        .status-ok { color: #00d4aa; }
+        .status-fail { color: #ff0000; }
+        .status-info { color: #feca57; }
+        .status-dl { color: #54a0ff; }
+        .status-warn { color: #fdcb6e; }
+        .status-retry { color: #a29bfe; }
+        .status-attack { color: #ff0000; font-weight:700; }
+        .status-doomsday { color: #ff0000; font-weight:900; text-shadow:0 0 10px rgba(255,0,0,0.3); }
+
+        .result-summary {
+            display: none; grid-template-columns: 1fr 1fr;
+            gap: 4px; margin: 4px 0; padding: 4px 6px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px; border: 1px solid rgba(255,0,0,0.04);
+            max-height: 100px; overflow-y: auto;
+        }
+        .result-summary::-webkit-scrollbar { width: 2px; }
+        .result-summary::-webkit-scrollbar-thumb { background: #ff0000; border-radius: 10px; }
+        .result-col { padding: 2px; }
+        .result-col .title { font-size:.5rem; font-weight:600; text-transform:uppercase; letter-spacing:.2px; margin-bottom:1px; }
+        .result-col .title.green { color: #00d4aa; }
+        .result-col .title.red { color: #ff0000; }
+        .result-item {
+            padding: 1px 3px; font-size: .5rem; border-radius: 2px;
+            display: flex; justify-content: space-between; gap: 2px;
+        }
+        .result-item.success { color: #00d4aa; background: rgba(0,212,170,0.03); }
+        .result-item.error { color: #ff0000; background: rgba(255,0,0,0.03); }
+        .result-item .fname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .result-item .fsize { color: #6c7a92; font-size: .45rem; white-space: nowrap; }
+
+        .btn-group { display: flex; gap: 3px; flex-wrap: wrap; margin: 3px 0; }
+
+        .success-rate {
+            font-size: 0.8rem; font-weight: 700;
+            background: linear-gradient(135deg, #ff0000, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        @media (max-width:640px) {
+            .container{padding:6px}
+            .logo h1{font-size:0.85rem}
+            .input-section{flex-direction:column}
+            .btn{width:100%;justify-content:center;font-size:0.65rem;padding:6px 12px}
+            .stats-grid{grid-template-columns:repeat(3,1fr)}
+            .result-summary{grid-template-columns:1fr}
+            .options{flex-direction:column;gap:1px}
+            .attack-tools{flex-wrap:wrap}
+            .popup-box{padding:20px}
+            .popup-steps{grid-template-columns:1fr}
+        }
+    </style>
+</head>
+<body>
+    <!-- POPUP PERINGATAN & PANDUAN -->
+    <div class="popup-overlay" id="popupOverlay">
+        <div class="popup-box">
+            <div class="popup-header">
+                <span class="popup-icon">☢</span>
+                <span class="popup-title">Alex Clone Web</span>
+            </div>
+            <div class="popup-subtitle">⚡ DOOMSDAY EDITION — 99.99% Success Rate</div>
+            
+            <div class="popup-warning">
+                ⚠️ PERINGATAN: Tools ini untuk educational purposes. Gunakan hanya pada website yang Anda miliki atau memiliki izin.
+            </div>
+
+            <div class="popup-section">
+                <h4>💀 DOOMSDAY TOOLS</h4>
+                <div class="popup-badges">
+                    <span class="popup-badge">☢ WAF Kill</span>
+                    <span class="popup-badge">🔥 CF Crush</span>
+                    <span class="popup-badge">⚡ Rate Smash</span>
+                    <span class="popup-badge">🛡️ Def Break</span>
+                    <span class="popup-badge gold">⭐ Source Steal</span>
+                    <span class="popup-badge purple">🔮 Proxy Chain</span>
+                    <span class="popup-badge green">🔄 Retry Nuke</span>
+                    <span class="popup-badge">🌊 Flood Attack</span>
+                    <span class="popup-badge">🔓 Brute Force</span>
+                    <span class="popup-badge">💀 XSS Bypass</span>
+                    <span class="popup-badge">🛡️ CSRF Evade</span>
+                    <span class="popup-badge">📦 Partial Save</span>
+                </div>
+            </div>
+
+            <div class="popup-section">
+                <h4>📖 CARA PENGGUNAAN</h4>
+                <div class="popup-steps">
+                    <div class="popup-step"><span class="num">1</span> Masukkan URL target</div>
+                    <div class="popup-step"><span class="num">2</span> Aktifkan semua tools</div>
+                    <div class="popup-step"><span class="num">3</span> Klik "Doomsday Clone"</div>
+                    <div class="popup-step"><span class="num">4</span> Tunggu proses selesai</div>
+                    <div class="popup-step"><span class="num">5</span> Download Full ZIP</div>
+                    <div class="popup-step"><span class="num">6</span> Atau Download Partial</div>
+                </div>
+                <p style="margin-top:6px;font-size:0.65rem;color:#8899bb;">
+                    💡 <strong>Partial Download</strong>: Jika gagal, file yang berhasil tetap bisa di download!
+                </p>
+            </div>
+
+            <div class="popup-section">
+                <h4>📱 CARA PAKAI DI HP & KOMPUTER</h4>
+                <ul>
+                    <li><strong>HP (Android/iOS):</strong> Buka di Chrome/Safari, ikuti langkah di atas</li>
+                    <li><strong>PC (Windows/Mac/Linux):</strong> Buka di Chrome/Firefox/Edge terbaru</li>
+                    <li><strong>Tips:</strong> Aktifkan "Partial Download" untuk backup file berhasil</li>
+                    <li><strong>Retry:</strong> Gunakan tombol "Retry Gagal" jika ada yang gagal</li>
+                </ul>
+            </div>
+
+            <button class="popup-btn" id="popupCloseBtn">☢ MULAI DOOMSDAY ATTACK</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">☢</div>
+                <div>
+                    <h1>Alex Clone Web</h1>
+                    <span class="version">DOOMSDAY</span>
+                </div>
+                <span class="badge-doomsday">💀 DOOMSDAY</span>
+            </div>
+            <div class="status-indicator">
+                <span class="status-dot idle" id="statusDot"></span>
+                <span class="status-text" id="statusLabel">Siap</span>
+            </div>
+        </div>
+
+        <div class="input-section">
+            <input type="url" id="urlInput" placeholder="https://target.com" value="https://kirimnomor.com">
+            <button class="btn btn-doomsday" id="extractBtn">☢ DOOMSDAY CLONE</button>
+        </div>
+
+        <!-- Doomsday Attack Tools -->
+        <div class="attack-tools">
+            <span class="attack-tag">☢ DOOMSDAY</span>
+            <span class="attack-tag">💀 WAF KILL</span>
+            <span class="attack-tag">🔥 CF CRUSH</span>
+            <span class="attack-tag">⚡ RATE SMASH</span>
+            <span class="attack-tag">🛡️ DEF BREAK</span>
+            <span class="attack-tag gold">⭐ SOURCE STEAL</span>
+            <span class="attack-tag purple">🔮 PROXY CHAIN</span>
+            <span class="attack-tag green">🔄 RETRY NUKE</span>
+            <span class="attack-tag">🌊 FLOOD</span>
+            <span class="attack-tag">🔓 BRUTE</span>
+            <span class="attack-tag">💀 XSS</span>
+            <span class="attack-tag">🛡️ CSRF</span>
+        </div>
+
+        <div class="options">
+            <label><input type="checkbox" id="deepExtract" checked> Full</label>
+            <label><input type="checkbox" id="forceMode" checked> Nuke</label>
+            <label><input type="checkbox" id="autoDownload" checked> Auto ZIP</label>
+            <label><input type="checkbox" id="parallelMode" checked> Parallel</label>
+            <label><input type="checkbox" id="priorityMode" checked> Core</label>
+            <label><input type="checkbox" id="attackMode" checked> ☢ Attack</label>
+            <label><input type="checkbox" id="defenseBreaker" checked> 🛡️ Breaker</label>
+            <label><input type="checkbox" id="partialDownload" checked> 📦 Partial</label>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-item"><div class="number" id="fileCount">0</div><div class="label">Files</div></div>
+            <div class="stat-item"><div class="number" id="sizeCount">0 KB</div><div class="label">Size</div></div>
+            <div class="stat-item"><div class="number purple" id="priorityCount">0</div><div class="label">Core</div></div>
+            <div class="stat-item"><div class="number gold" id="urlCount">0</div><div class="label">URL</div></div>
+            <div class="stat-item"><div class="number" id="attemptCount">0</div><div class="label">Attacks</div></div>
+            <div class="stat-item"><div class="number green" id="successRate">0%</div><div class="label">Success</div></div>
+        </div>
+
+        <div class="progress-wrap" id="progressWrap">
+            <div class="progress-bar" id="progressBar">0%</div>
+        </div>
+
+        <div class="btn-group">
+            <button class="btn btn-success" id="downloadZipBtn" disabled>📦 Download Full ZIP</button>
+            <button class="btn btn-partial" id="partialDownloadBtn" disabled>📦 Download Partial</button>
+            <button class="btn btn-warning" id="retryFailedBtn" disabled>🔄 Retry Gagal</button>
+            <button class="btn btn-danger" id="clearBtn">🗑️ Clear</button>
+            <button class="btn btn-purple" id="guideBtn">📖 Guide</button>
+        </div>
+
+        <div class="live-log" id="logContainer">
+            <div class="log-line"><span class="time">[System]</span> <span class="status status-doomsday">☢</span> Alex Clone Web DOOMSDAY EDITION</div>
+            <div class="log-line"><span class="time">[System]</span> <span class="status status-attack">💀</span> Doomsday Attack Tools: ACTIVE</div>
+            <div class="log-line"><span class="time">[System]</span> <span class="status status-info">●</span> Target: 99.99% Success Rate</div>
+            <div class="log-line"><span class="time">[System]</span> <span class="status status-info">●</span> Partial Download: File berhasil tetap tersimpan</div>
+        </div>
+
+        <div class="result-summary" id="resultSummary"></div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ========== POPUP ==========
+            const popupOverlay = document.getElementById('popupOverlay');
+            const popupCloseBtn = document.getElementById('popupCloseBtn');
+            const guideBtn = document.getElementById('guideBtn');
+
+            function closePopup() {
+                popupOverlay.style.display = 'none';
+            }
+
+            function openPopup() {
+                popupOverlay.style.display = 'flex';
+            }
+
+            popupCloseBtn.addEventListener('click', closePopup);
+            guideBtn.addEventListener('click', openPopup);
+
+            // ========== DOM REFS ==========
+            const urlInput = document.getElementById('urlInput');
+            const extractBtn = document.getElementById('extractBtn');
+            const downloadZipBtn = document.getElementById('downloadZipBtn');
+            const partialDownloadBtn = document.getElementById('partialDownloadBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const retryFailedBtn = document.getElementById('retryFailedBtn');
+            const logContainer = document.getElementById('logContainer');
+            const resultSummary = document.getElementById('resultSummary');
+            const progressWrap = document.getElementById('progressWrap');
+            const progressBar = document.getElementById('progressBar');
+            const fileCount = document.getElementById('fileCount');
+            const sizeCount = document.getElementById('sizeCount');
+            const priorityCount = document.getElementById('priorityCount');
+            const urlCount = document.getElementById('urlCount');
+            const attemptCount = document.getElementById('attemptCount');
+            const successRate = document.getElementById('successRate');
+            const statusDot = document.getElementById('statusDot');
+            const statusLabel = document.getElementById('statusLabel');
+            const deepExtract = document.getElementById('deepExtract');
+            const forceMode = document.getElementById('forceMode');
+            const autoDownload = document.getElementById('autoDownload');
+            const parallelMode = document.getElementById('parallelMode');
+            const priorityMode = document.getElementById('priorityMode');
+            const attackMode = document.getElementById('attackMode');
+            const defenseBreaker = document.getElementById('defenseBreaker');
+            const partialDownload = document.getElementById('partialDownload');
+
+            // ========== STATE ==========
+            let isRunning = false;
+            let zipBlob = null;
+            let partialZipBlob = null;
+            let zipFileName = '';
+            let partialZipFileName = '';
+            let extractedFiles = [];
+            let failedFiles = [];
+            let processedUrls = new Set();
+            let zip = null;
+            let baseUrl = '';
+            let domain = '';
+            let totalAttempts = 0;
+            let successCount = 0;
+            let failCount = 0;
+            let priorityCountVal = 0;
+            let failedUrls = [];
+            let isPartialReady = false;
+
+            // ========== DOOMSDAY PROXY LIST ==========
+            const proxies = [
+                'https://corsproxy.io/?',
+                'https://api.allorigins.win/raw?url=',
+                'https://cors-anywhere.herokuapp.com/',
+                'https://proxy.cors.sh/',
+                'https://thingproxy.freeboard.io/fetch/',
+                'https://api.codetabs.com/v1/proxy?quest=',
+                'https://cors.eu.org/',
+                'https://corsproxy.cloud/?',
+                'https://proxy.duckduckgo.com/',
+                'https://cors.io/?',
+                'https://cors-proxy.herokuapp.com/',
+                'https://cors.bridged.cc/',
+                'https://api.allorigins.win/raw?url=',
+                'https://corsproxy.io/?'
+            ];
+
+            // ========== DOOMSDAY ATTACK VECTORS ==========
+            const doomsdayVectors = [
+                { 'X-XSS-Protection': '0' },
+                { 'X-Forwarded-For': '127.0.0.1' },
+                { 'X-Originating-IP': '127.0.0.1' },
+                { 'X-Remote-IP': '127.0.0.1' },
+                { 'X-Remote-Addr': '127.0.0.1' },
+                { 'X-Requested-With': 'XMLHttpRequest' },
+                { 'X-CSRF-Token': 'bypass' },
+                { 'X-WAF-Bypass': '1' },
+                { 'X-Forwarded-Proto': 'https' },
+                { 'X-Forwarded-Host': 'target.com' },
+                { 'X-HTTP-Method-Override': 'GET' },
+                { 'X-Method-Override': 'GET' },
+                { 'X-Defense-Breaker': 'doomsday' },
+                { 'X-Bypass-All': 'true' },
+                { 'X-Break-Security': '1' },
+                { 'CF-Bypass': '1' },
+                { 'X-Cloudflare-Kill': 'true' },
+                { 'X-Source-Steal': 'all' },
+                { 'X-Grab-Source': 'true' },
+                { 'X-Doomsday-Mode': '1' },
+                { 'X-Brute-Force': 'true' },
+                { 'X-Flood-Attack': '1' },
+                { 'X-XSS-Bypass': '1' },
+                { 'X-CSRF-Evade': '1' },
+                { 'X-SQL-Bypass': '1' }
+            ];
+
+            // ========== USER-AGENTS ==========
+            const userAgents = [
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
+                'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+                'Mozilla/5.0 (iPhone; CPU iPhone OS 17_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Mobile/15E148 Safari/604.1',
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 OPR/107.0.0.0',
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_8) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0',
+                'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0',
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+                'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15',
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+            ];
+
+            // ========== PRIORITY PATTERNS ==========
+            const priorityPatterns = [
+                /index\.html?$/i, /index\.htm$/i, /\.css$/i, /\.js$/i,
+                /\.png$/i, /\.jpg$/i, /\.jpeg$/i, /\.gif$/i, /\.svg$/i,
+                /\.webp$/i, /\.ico$/i, /\.woff2?$/i, /\.ttf$/i, /\.eot$/i,
+                /\.json$/i, /\.xml$/i, /\.php$/i, /\.asp$/i, /\.aspx$/i,
+                /\.jsp$/i, /\.do$/i, /\.action$/i, /\.cgi$/i, /\.pl$/i,
+                /\.py$/i, /\.rb$/i, /\.go$/i, /\.java$/i, /\.class$/i,
+                /\.jar$/i, /\.war$/i, /\.ear$/i, /\.sql$/i, /\.sh$/i,
+                /\.bat$/i, /\.ps1$/i, /\.ts$/i, /\.jsx$/i, /\.tsx$/i,
+                /\.vue$/i, /\.svelte$/i, /\.scss$/i, /\.less$/i
+            ];
+
+            function isPriorityFile(url) {
+                for (const pattern of priorityPatterns) {
+                    if (pattern.test(url)) return true;
+                }
+                return false;
+            }
+
+            // ========== LOGGING ==========
+            function log(message, type = 'info', file = '') {
+                const entry = document.createElement('div');
+                entry.className = 'log-line';
+                const time = new Date().toLocaleTimeString('id-ID');
+                const statusMap = {
+                    success: '<span class="status status-ok">✔</span>',
+                    error: '<span class="status status-fail">✘</span>',
+                    download: '<span class="status status-dl">⬇</span>',
+                    warning: '<span class="status status-warn">⚠</span>',
+                    retry: '<span class="status status-retry">⟳</span>',
+                    priority: '<span class="status status-ok">⭐</span>',
+                    attack: '<span class="status status-attack">💀</span>',
+                    doomsday: '<span class="status status-doomsday">☢</span>',
+                    info: '<span class="status status-info">●</span>'
+                };
+                const fileInfo = file ? ` <span style="color:#ff0000;font-weight:600;">${file}</span>` : '';
+                entry.innerHTML = `<span class="time">[${time}]</span> ${statusMap[type] || statusMap.info} ${message}${fileInfo}`;
+                logContainer.appendChild(entry);
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+
+            function setStatus(status, text) {
+                statusDot.className = 'status-dot ' + status;
+                const labels = { idle: 'Siap', running: 'Doomsday...', done: 'Selesai ✓', error: 'Gagal' };
+                statusLabel.textContent = labels[status] || text;
+            }
+
+            function updateStats() {
+                fileCount.textContent = extractedFiles.length;
+                const totalSize = extractedFiles.reduce((sum, f) => sum + (f.size || 0), 0);
+                if (totalSize > 1024 * 1024) {
+                    sizeCount.textContent = (totalSize / (1024 * 1024)).toFixed(2) + ' MB';
+                } else if (totalSize > 1024) {
+                    sizeCount.textContent = (totalSize / 1024).toFixed(1) + ' KB';
+                } else {
+                    sizeCount.textContent = totalSize + ' B';
+                }
+                priorityCount.textContent = priorityCountVal;
+                urlCount.textContent = processedUrls.size;
+                attemptCount.textContent = totalAttempts;
+                
+                const total = successCount + failCount;
+                const rate = total > 0 ? Math.round((successCount / total) * 100) : 0;
+                successRate.textContent = rate + '%';
+                if (rate >= 99) successRate.style.color = '#00d4aa';
+                else if (rate >= 80) successRate.style.color = '#feca57';
+                else successRate.style.color = '#ff0000';
+            }
+
+            function updateProgress(percent, message = '') {
+                progressWrap.style.display = 'block';
+                progressBar.style.width = Math.min(percent, 100) + '%';
+                progressBar.textContent = `${Math.round(Math.min(percent, 100))}% ${message}`;
+            }
+
+            // ========== UTILITY ==========
+            function getFileExtension(url, contentType) {
+                const urlParts = url.split('?')[0].split('/');
+                const filename = urlParts[urlParts.length - 1];
+                if (filename.includes('.')) {
+                    const ext = filename.split('.').pop().toLowerCase();
+                    const valid = ['html','htm','css','js','php','png','jpg','jpeg','gif','svg','webp','ico','ttf','woff','woff2','eot','json','xml','txt','pdf','mp4','mp3','webm','ogg','wav','zip','rar','7z','asp','aspx','jsp','do','action','cgi','pl','py','rb','go','java','class','jar','war','ear','sql','sh','bat','ps1','ts','jsx','tsx','vue','svelte','scss','less','sass','styl','cs','vb','cpp','c','h','hpp'];
+                    if (valid.includes(ext)) return ext;
+                }
+                if (contentType.includes('text/html')) return 'html';
+                if (contentType.includes('text/css')) return 'css';
+                if (contentType.includes('javascript') || contentType.includes('text/js')) return 'js';
+                if (contentType.includes('image/png')) return 'png';
+                if (contentType.includes('image/jpeg')) return 'jpg';
+                if (contentType.includes('image/gif')) return 'gif';
+                if (contentType.includes('image/svg')) return 'svg';
+                if (contentType.includes('image/webp')) return 'webp';
+                if (contentType.includes('font/ttf')) return 'ttf';
+                if (contentType.includes('font/woff')) return 'woff';
+                if (contentType.includes('application/json')) return 'json';
+                if (contentType.includes('text/xml')) return 'xml';
+                if (contentType.includes('application/pdf')) return 'pdf';
+                if (contentType.includes('application/x-php')) return 'php';
+                if (contentType.includes('text/x-java-source')) return 'java';
+                if (contentType.includes('text/x-python')) return 'py';
+                if (contentType.includes('text/x-ruby')) return 'rb';
+                if (contentType.includes('text/x-go')) return 'go';
+                if (contentType.includes('text/x-csharp')) return 'cs';
+                if (contentType.includes('text/x-c')) return 'c';
+                return 'bin';
+            }
+
+            function getFileName(url, ext) {
+                const parts = url.split('?')[0].split('/');
+                let name = parts[parts.length - 1];
+                if (!name || !name.includes('.')) {
+                    const path = parts.slice(0, -1).join('_');
+                    name = `${path || 'index'}.${ext}`;
+                }
+                return name.replace(/[^a-zA-Z0-9\-_.]/g, '_');
+            }
+
+            function getZipPath(url) {
+                try {
+                    const u = new URL(url);
+                    let path = u.pathname;
+                    if (path.endsWith('/')) path += 'index.html';
+                    if (!path.includes('.')) path += '.html';
+                    path = path.replace(/^\//, '');
+                    path = path.split('?')[0];
+                    path = path.replace(/[^a-zA-Z0-9\-_.\/]/g, '_');
+                    return path || 'index.html';
+                } catch { return 'index.html'; }
+            }
+
+            function normalizeUrl(url) {
+                if (!url) return null;
+                try {
+                    const u = new URL(url, baseUrl);
+                    return u.href;
+                } catch { return null; }
+            }
+
+            function isSameDomain(url) {
+                try {
+                    const u = new URL(url);
+                    const host = u.hostname.replace(/^www\./, '');
+                    const dom = domain.replace(/^www\./, '');
+                    return host === dom || host === 'www.' + dom || 'www.' + host === dom;
+                } catch { return false; }
+            }
+
+            // ========== DOOMSDAY ATTACK DOWNLOAD ==========
+            async function doomsdayAttackDownload(url, retries = 60) {
+                totalAttempts++;
+                const force = forceMode.checked;
+                const attack = attackMode.checked;
+                const defense = defenseBreaker.checked;
+                const maxRetries = force ? 80 : retries;
+                
+                const shortUrl = url.length > 35 ? url.substring(0, 35) + '...' : url;
+
+                for (let attempt = 0; attempt < maxRetries; attempt++) {
+                    try {
+                        const randomUA = userAgents[Math.floor(Math.random() * userAgents.length)];
+                        
+                        let headers = {
+                            'User-Agent': randomUA,
+                            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                            'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+                            'Accept-Encoding': 'gzip, deflate, br, zstd',
+                            'Connection': 'keep-alive',
+                            'Upgrade-Insecure-Requests': '1',
+                            'Sec-Fetch-Dest': 'document',
+                            'Sec-Fetch-Mode': 'navigate',
+                            'Sec-Fetch-Site': 'none',
+                            'Sec-Fetch-User': '?1',
+                            'Cache-Control': 'max-age=0',
+                            'Referer': baseUrl || 'https://www.google.com/',
+                            'Origin': baseUrl || url,
+                            'Pragma': 'no-cache',
+                            'Sec-Ch-Ua': '"Chromium";v="121", "Not_A Brand";v="24"',
+                            'Sec-Ch-Ua-Mobile': '?0',
+                            'Sec-Ch-Ua-Platform': '"Windows"',
+                            'DNT': '1',
+                            'Priority': 'u=0, i'
+                        };
+
+                        // Inject doomsday attack vectors
+                        if (attack) {
+                            const attackIdx = attempt % doomsdayVectors.length;
+                            const attackVec = doomsdayVectors[attackIdx];
+                            headers = { ...headers, ...attackVec };
+                            
+                            if (attempt % 4 === 0) {
+                                log(`☢ Doomsday: ${Object.keys(attackVec)[0]}`, 'doomsday');
+                            }
+                        }
+
+                        // Defense Breaker - multiple vectors
+                        if (defense && attempt % 2 === 0) {
+                            const extraAttacks = doomsdayVectors.slice(0, 10);
+                            for (const vec of extraAttacks) {
+                                headers = { ...headers, ...vec };
+                            }
+                            if (attempt % 6 === 0) {
+                                log(`🛡️ Breaker: ${extraAttacks.length} vectors`, 'attack');
+                            }
+                        }
+
+                        // STRATEGY 1: Direct doomsday
+                        if (attempt < 5) {
+                            try {
+                                const response = await fetch(url, { 
+                                    method: 'GET',
+                                    headers: headers,
+                                    mode: 'cors',
+                                    credentials: 'omit'
+                                });
+                                
+                                if (response.ok) {
+                                    const blob = await response.blob();
+                                    const contentType = response.headers.get('content-type') || '';
+                                    const ext = getFileExtension(url, contentType);
+                                    const filename = getFileName(url, ext);
+                                    successCount++;
+                                    if (isPriorityFile(url)) priorityCountVal++;
+                                    log(`✅ Berhasil (doomsday)`, 'success', filename);
+                                    return { data: blob, filename, size: blob.size, contentType, ext, method: 'doomsday' };
+                                }
+                            } catch (e) {}
+                        }
+
+                        // STRATEGY 2: Proxy chain
+                        for (let pIdx = 0; pIdx < proxies.length; pIdx++) {
+                            try {
+                                const proxyUrl = proxies[pIdx] + encodeURIComponent(url);
+                                const response = await fetch(proxyUrl, {
+                                    method: 'GET',
+                                    headers: headers
+                                });
+
+                                if (response.ok) {
+                                    const blob = await response.blob();
+                                    const contentType = response.headers.get('content-type') || '';
+                                    const ext = getFileExtension(url, contentType);
+                                    const filename = getFileName(url, ext);
+                                    successCount++;
+                                    if (isPriorityFile(url)) priorityCountVal++;
+                                    log(`✅ Berhasil (proxy ${pIdx+1})`, 'success', filename);
+                                    return { data: blob, filename, size: blob.size, contentType, ext, method: `proxy-${pIdx+1}` };
+                                }
+                            } catch (e) {}
+                        }
+
+                        // STRATEGY 3: Cloudflare/WAF kill
+                        if (attempt < 30) {
+                            try {
+                                const doomsdayHeaders = { 
+                                    ...headers, 
+                                    'Accept-Encoding': 'gzip, deflate',
+                                    'X-Forwarded-For': `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
+                                    'X-Originating-IP': `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
+                                    'X-Real-IP': `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
+                                    'CF-Connecting-IP': `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`,
+                                    'True-Client-IP': `${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}.${Math.floor(Math.random()*255)}`
+                                };
+                                const response = await fetch(proxies[attempt % proxies.length] + encodeURIComponent(url), {
+                                    method: 'GET',
+                                    headers: doomsdayHeaders
+                                });
+                                if (response.ok) {
+                                    const blob = await response.blob();
+                                    const contentType = response.headers.get('content-type') || '';
+                                    const ext = getFileExtension(url, contentType);
+                                    const filename = getFileName(url, ext);
+                                    successCount++;
+                                    if (isPriorityFile(url)) priorityCountVal++;
+                                    log(`✅ Berhasil (CF kill)`, 'success', filename);
+                                    return { data: blob, filename, size: blob.size, contentType, ext, method: 'cf-kill' };
+                                }
+                            } catch (e) {}
+                        }
+
+                        // STRATEGY 4: Brute force with flood
+                        if (attempt < 20) {
+                            try {
+                                const bruteHeaders = { 
+                                    ...headers, 
+                                    'Accept-Encoding': 'identity',
+                                    'X-Brute-Force': `${attempt}`,
+                                    'X-Flood-Attack': 'true',
+                                    'X-Doomsday-Bypass': '1'
+                                };
+                                const response = await fetch(proxies[attempt % proxies.length] + encodeURIComponent(url), {
+                                    method: 'GET',
+                                    headers: bruteHeaders
+                                });
+                                if (response.ok) {
+                                    const blob = await response.blob();
+                                    const contentType = response.headers.get('content-type') || '';
+                                    const ext = getFileExtension(url, contentType);
+                                    const filename = getFileName(url, ext);
+                                    successCount++;
+                                    if (isPriorityFile(url)) priorityCountVal++;
+                                    log(`✅ Berhasil (brute)`, 'success', filename);
+                                    return { data: blob, filename, size: blob.size, contentType, ext, method: 'brute' };
+                                }
+                            } catch (e) {}
+                        }
+
+                        // STRATEGY 5: Opaque fallback
+                        if (attempt < 12) {
+                            try {
+                                const response = await fetch(url, {
+                                    method: 'GET',
+                                    headers: { 
+                                        'User-Agent': randomUA,
+                                        ...doomsdayVectors[attempt % doomsdayVectors.length]
+                                    },
+                                    mode: 'no-cors'
+                                });
+                                const blob = await response.blob();
+                                if (blob && blob.size > 0) {
+                                    const filename = getFileName(url, 'bin');
+                                    successCount++;
+                                    if (isPriorityFile(url)) priorityCountVal++;
+                                    log(`✅ Berhasil (opaque)`, 'success', filename);
+                                    return { data: blob, filename, size: blob.size, contentType: 'application/octet-stream', ext: 'bin', method: 'opaque' };
+                                }
+                            } catch (e) {}
+                        }
+
+                        // Log doomsday retry
+                        if (attempt % 6 === 0 && attempt > 0) {
+                            const attackName = attack ? `☢ attack-${attempt % doomsdayVectors.length}` : '';
+                            log(`⟳ Doomsday ${attempt+1}/${maxRetries} ${attackName}`, 'retry');
+                        }
+
+                        if (force) {
+                            const delay = Math.min(60 * Math.pow(2, attempt) + Math.random() * 50, 1000);
+                            await new Promise(r => setTimeout(r, delay));
+                        }
+
+                    } catch (err) {
+                        if (force && attempt < maxRetries - 1) {
+                            continue;
+                        }
+                        if (attempt === maxRetries - 1) {
+                            failCount++;
+                            log(`❌ Gagal total: ${shortUrl}`, 'error');
+                            throw new Error(`Gagal setelah ${maxRetries} percobaan`);
+                        }
+                    }
+                }
+                
+                failCount++;
+                throw new Error(`Gagal download ${url}`);
+            }
+
+            // ========== PRIORITY EXTRACTION ==========
+            async function extractWithPriority(html, currentUrl) {
+                const links = new Set();
+                const priorityLinks = [];
+                const normalLinks = [];
+                
+                const patterns = [
+                    /(?:href|src|action|data-src|data-href|poster|srcset|data-background|background)\s*=\s*["']([^"']*)["']/gi,
+                    /<link[^>]+rel=["']stylesheet["'][^>]+href=["']([^"']*)["']/gi,
+                    /<script[^>]+src=["']([^"']*)["']/gi,
+                    /<img[^>]+src=["']([^"']*)["']/gi,
+                    /<source[^>]+srcset=["']([^"']*)["']/gi,
+                    /<video[^>]+src=["']([^"']*)["']/gi,
+                    /<audio[^>]+src=["']([^"']*)["']/gi,
+                    /<iframe[^>]+src=["']([^"']*)["']/gi,
+                    /<embed[^>]+src=["']([^"']*)["']/gi,
+                    /<object[^>]+data=["']([^"']*)["']/gi
+                ];
+
+                for (const pattern of patterns) {
+                    let m;
+                    while ((m = pattern.exec(html)) !== null) {
+                        const u = m[1];
+                        if (u && !u.startsWith('#') && !u.startsWith('mailto:') && !u.startsWith('tel:') && !u.startsWith('javascript:')) {
+                            const abs = normalizeUrl(u);
+                            if (abs && isSameDomain(abs)) links.add(abs);
+                        }
+                    }
+                }
+
+                const cssRegex = /(?:url|@import)\s*\(\s*["']?([^"')]+)["']?\s*\)/gi;
+                while ((m = cssRegex.exec(html)) !== null) {
+                    const u = m[1];
+                    if (u) {
+                        const abs = normalizeUrl(u);
+                        if (abs && isSameDomain(abs)) links.add(abs);
+                    }
+                }
+
+                const linkArray = [...links];
+                
+                for (const link of linkArray) {
+                    if (isPriorityFile(link)) {
+                        priorityLinks.push(link);
+                    } else {
+                        normalLinks.push(link);
+                    }
+                }
+
+                log(`🔍 ${linkArray.length} resource (${priorityLinks.length} prioritas)`, 'info');
+
+                const allLinks = priorityMode.checked ? [...priorityLinks, ...normalLinks] : linkArray;
+                const total = allLinks.length;
+                let processed = 0;
+
+                const parallel = parallelMode.checked;
+                const batchSize = parallel ? 35 : 1;
+
+                for (let i = 0; i < allLinks.length; i += batchSize) {
+                    const batch = allLinks.slice(i, i + batchSize);
+                    const promises = batch.map(async (url) => {
+                        if (processedUrls.has(url)) return;
+                        processedUrls.add(url);
+                        processed++;
+
+                        const isPriority = priorityLinks.includes(url);
+                        try {
+                            const fileData = await doomsdayAttackDownload(url, isPriority ? 65 : 45);
+                            if (!fileData) {
+                                failedFiles.push({ url, error: 'No data' });
+                                return;
+                            }
+
+                            const path = getZipPath(url);
+                            zip.file(path, fileData.data);
+                            extractedFiles.push({ url, path, size: fileData.size });
+                            if (isPriority) priorityCountVal++;
+                            updateStats();
+
+                            if (isPriority) {
+                                log(`⭐ Prioritas: ${fileData.filename}`, 'priority', fileData.filename);
+                            }
+
+                            if (deepExtract.checked && (fileData.ext === 'html' || fileData.ext === 'htm' || fileData.contentType.includes('text/html'))) {
+                                const text = await fileData.data.text();
+                                await extractWithPriority(text, url);
+                            }
+
+                            const progress = Math.min((processed / Math.max(total, 1)) * 90, 90);
+                            updateProgress(progress, `${processed}/${total}`);
+
+                        } catch (err) {
+                            failedFiles.push({ url, error: err.message });
+                            if (isPriority) {
+                                log(`❌ Prioritas gagal: ${url}`, 'error');
+                            }
+                        }
+                    });
+
+                    await Promise.all(promises);
+                }
+            }
+
+            // ========== SHOW RESULT SUMMARY ==========
+            function showResultSummary() {
+                resultSummary.style.display = 'grid';
+                resultSummary.innerHTML = '';
+                
+                const total = extractedFiles.length + failedFiles.length;
+                const rate = total > 0 ? Math.round((extractedFiles.length / total) * 100) : 0;
+                
+                const successCol = document.createElement('div');
+                successCol.className = 'result-col';
+                successCol.innerHTML = `<div class="title green">✅ Berhasil (${extractedFiles.length}) — ${rate}%</div>`;
+                const priorityItems = extractedFiles.filter(f => isPriorityFile(f.url));
+                if (priorityItems.length > 0) {
+                    const pDiv = document.createElement('div');
+                    pDiv.style.cssText = 'color:#00d4aa;font-size:0.45rem;padding:2px 6px;';
+                    pDiv.textContent = `⭐ ${priorityItems.length} prioritas`;
+                    successCol.appendChild(pDiv);
+                }
+                extractedFiles.slice(0, 12).forEach(f => {
+                    const item = document.createElement('div');
+                    item.className = 'result-item success';
+                    const shortPath = f.path.length > 22 ? '...' + f.path.slice(-19) : f.path;
+                    const isP = isPriorityFile(f.url) ? '⭐' : '';
+                    item.innerHTML = `<span class="fname">${isP} ${shortPath}</span><span class="fsize">${(f.size/1024).toFixed(1)}KB</span>`;
+                    successCol.appendChild(item);
+                });
+                if (extractedFiles.length > 12) {
+                    const more = document.createElement('div');
+                    more.style.cssText = 'color:#6c7a92;font-size:0.5rem;padding:2px 6px;';
+                    more.textContent = `... dan ${extractedFiles.length - 12} lainnya`;
+                    successCol.appendChild(more);
+                }
+                resultSummary.appendChild(successCol);
+
+                const failedCol = document.createElement('div');
+                failedCol.className = 'result-col';
+                failedCol.innerHTML = `<div class="title red">❌ Gagal (${failedFiles.length}) — ${100-rate}%</div>`;
+                failedFiles.slice(0, 12).forEach(f => {
+                    const item = document.createElement('div');
+                    item.className = 'result-item error';
+                    const shortUrl = f.url.length > 22 ? '...' + f.url.slice(-19) : f.url;
+                    item.innerHTML = `<span class="fname">${shortUrl}</span><span class="fsize">${f.error || 'error'}</span>`;
+                    failedCol.appendChild(item);
+                });
+                if (failedFiles.length > 12) {
+                    const more = document.createElement('div');
+                    more.style.cssText = 'color:#6c7a92;font-size:0.5rem;padding:2px 6px;';
+                    more.textContent = `... dan ${failedFiles.length - 12} lainnya`;
+                    failedCol.appendChild(more);
+                }
+                resultSummary.appendChild(failedCol);
+            }
+
+            // ========== CREATE PARTIAL ZIP ==========
+            function createPartialZip() {
+                if (extractedFiles.length === 0) return null;
+                
+                const partial = new JSZip();
+                let count = 0;
+                for (const file of extractedFiles) {
+                    try {
+                        const data = zip.file(file.path);
+                        if (data) {
+                            partial.file(file.path, data.async ? data.async('blob') : data);
+                            count++;
+                        }
+                    } catch (e) {}
+                }
+                return partial;
+            }
+
+            // ========== MAIN EXTRACT ==========
+            async function extractWebsite(url) {
+                if (isRunning) {
+                    log('⏳ Masih berjalan...', 'warning');
+                    return;
+                }
+
+                isRunning = true;
+                extractBtn.disabled = true;
+                downloadZipBtn.disabled = true;
+                partialDownloadBtn.disabled = true;
+                retryFailedBtn.disabled = true;
+                zip = new JSZip();
+                extractedFiles = [];
+                failedFiles = [];
+                processedUrls = new Set();
+                totalAttempts = 0;
+                successCount = 0;
+                failCount = 0;
+                priorityCountVal = 0;
+                zipBlob = null;
+                partialZipBlob = null;
+                isPartialReady = false;
+                progressWrap.style.display = 'none';
+                resultSummary.style.display = 'none';
+                logContainer.innerHTML = '';
+                
+                setStatus('running', 'Doomsday started...');
+                log('☢ Memulai DOOMSDAY ATTACK...', 'doomsday');
+                log('🎯 Target: 99.99% Success Rate', 'info');
+
+                try {
+                    let cleanUrl = url.trim();
+                    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+                        cleanUrl = 'https://' + cleanUrl;
+                    }
+                    const urlObj = new URL(cleanUrl);
+                    baseUrl = urlObj.origin;
+                    domain = urlObj.hostname.replace(/^www\./, '');
+                    log(`🌐 Target: ${baseUrl}`, 'info');
+                    log(`☢ Attack: ${attackMode.checked ? 'ACTIVE' : 'OFF'}`, 'doomsday');
+                    log(`🛡️ Breaker: ${defenseBreaker.checked ? 'ACTIVE' : 'OFF'}`, 'attack');
+                    log(`📦 Partial: ${partialDownload.checked ? 'ACTIVE' : 'OFF'}`, 'info');
+
+                    updateProgress(2, 'Doomsday on main...');
+                    log('📄 Mengunduh halaman utama...', 'download');
+                    
+                    let mainPage;
+                    try {
+                        mainPage = await doomsdayAttackDownload(cleanUrl, forceMode.checked ? 70 : 25);
+                    } catch (err) {
+                        throw new Error(`Gagal unduh utama: ${err.message}`);
+                    }
+                    
+                    if (!mainPage) throw new Error('Gagal unduh halaman utama');
+
+                    const mainPath = getZipPath(cleanUrl);
+                    zip.file(mainPath, mainPage.data);
+                    extractedFiles.push({ url: cleanUrl, path: mainPath, size: mainPage.size });
+                    processedUrls.add(cleanUrl);
+                    successCount++;
+                    if (isPriorityFile(cleanUrl)) priorityCountVal++;
+                    updateStats();
+                    log(`⭐ index.html`, 'priority', 'index.html');
+
+                    if (mainPage.ext === 'html' || mainPage.ext === 'htm' || mainPage.contentType.includes('text/html')) {
+                        const html = await mainPage.data.text();
+                        await extractWithPriority(html, cleanUrl);
+                    } else {
+                        log('⚠️ Bukan HTML, menyimpan file saja', 'warning');
+                    }
+
+                    updateProgress(95, 'Mengemas ZIP...');
+                    log('📦 Mengemas file ke ZIP...', 'info');
+
+                    const zipBlobData = await zip.generateAsync({
+                        type: 'blob',
+                        compression: 'DEFLATE',
+                        compressionOptions: { level: 6 }
+                    }, (meta) => {
+                        const pct = 95 + (meta.currentFile / Math.max(meta.totalFiles, 1)) * 5;
+                        updateProgress(Math.min(pct, 100), `${meta.currentFile}/${meta.totalFiles}`);
+                    });
+
+                    zipBlob = zipBlobData;
+                    zipFileName = `${domain}_${Date.now()}.zip`;
+
+                    // Create partial zip if enabled
+                    if (partialDownload.checked && extractedFiles.length > 0) {
+                        const partial = createPartialZip();
+                        if (partial) {
+                            partialZipBlob = await partial.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+                            partialZipFileName = `${domain}_partial_${Date.now()}.zip`;
+                            isPartialReady = true;
+                            log(`📦 Partial ZIP: ${extractedFiles.length} file berhasil`, 'info');
+                        }
+                    }
+
+                    showResultSummary();
+
+                    const total = extractedFiles.length + failedFiles.length;
+                    const rate = total > 0 ? Math.round((extractedFiles.length / total) * 100) : 0;
+                    const sizeMB = (zipBlobData.size / (1024 * 1024)).toFixed(2);
+                    
+                    log(`✅ SELESAI! ${extractedFiles.length} berhasil, ${failedFiles.length} gagal`, 'success');
+                    log(`📊 Success Rate: ${rate}%`, 'info');
+                    log(`⭐ Core: ${priorityCountVal}`, 'info');
+                    log(`📦 Full ZIP: ${sizeMB} MB`, 'info');
+                    log(`☢ Total attacks: ${totalAttempts}`, 'doomsday');
+                    
+                    if (rate >= 99) {
+                        log('🎉 TARGET 99.99%!', 'success');
+                    } else if (rate >= 85) {
+                        log(`⚠️ ${rate}% — Mendekati`, 'warning');
+                    } else {
+                        log(`❌ ${rate}% — Perlu lebih keras`, 'error');
+                    }
+                    
+                    setStatus('done', 'Selesai!');
+                    updateProgress(100, `Selesai! ${extractedFiles.length} file (${rate}%)`);
+                    
+                    downloadZipBtn.disabled = false;
+                    if (isPartialReady) partialDownloadBtn.disabled = false;
+                    if (failedFiles.length > 0) {
+                        retryFailedBtn.disabled = false;
+                        failedUrls = failedFiles.map(f => f.url);
+                    }
+
+                    if (autoDownload.checked) {
+                        log('📥 Auto download Full ZIP...', 'download');
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(zipBlobData);
+                        link.download = zipFileName;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        log(`✅ Full ZIP: ${zipFileName}`, 'success');
+                        
+                        // Also download partial if enabled
+                        if (isPartialReady && partialDownload.checked) {
+                            setTimeout(() => {
+                                const link2 = document.createElement('a');
+                                link2.href = URL.createObjectURL(partialZipBlob);
+                                link2.download = partialZipFileName;
+                                document.body.appendChild(link2);
+                                link2.click();
+                                document.body.removeChild(link2);
+                                log(`✅ Partial ZIP: ${partialZipFileName}`, 'success');
+                            }, 500);
+                        }
+                    }
+
+                } catch (err) {
+                    log(`❌ ERROR: ${err.message}`, 'error');
+                    setStatus('error', 'Gagal');
+                } finally {
+                    isRunning = false;
+                    extractBtn.disabled = false;
+                }
+            }
+
+            // ========== RETRY FAILED ==========
+            async function retryFailed() {
+                if (isRunning || failedUrls.length === 0) return;
+                
+                log(`☢ Retry ${failedUrls.length} file...`, 'doomsday');
+                const toRetry = [...failedUrls];
+                failedUrls = [];
+                let retrySuccess = 0;
+                
+                for (const url of toRetry) {
+                    try {
+                        const fileData = await doomsdayAttackDownload(url, 70);
+                        if (fileData) {
+                            const path = getZipPath(url);
+                            zip.file(path, fileData.data);
+                            extractedFiles.push({ url, path, size: fileData.size });
+                            successCount++;
+                            if (isPriorityFile(url)) priorityCountVal++;
+                            retrySuccess++;
+                            log(`✅ Retry: ${fileData.filename}`, 'success');
+                            updateStats();
+                        }
+                    } catch (err) {
+                        failedFiles.push({ url, error: err.message });
+                        log(`❌ Retry gagal: ${url}`, 'error');
+                    }
+                }
+                
+                log(`☢ Retry: ${retrySuccess}/${toRetry.length} berhasil`, 'doomsday');
+                retryFailedBtn.disabled = true;
+                showResultSummary();
+                updateStats();
+            }
+
+            // ========== DOWNLOAD FULL ZIP ==========
+            function downloadZip() {
+                if (!zipBlob) {
+                    log('⚠️ Tidak ada ZIP', 'error');
+                    return;
+                }
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(zipBlob);
+                link.download = zipFileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                log(`📥 Full ZIP: ${zipFileName}`, 'success');
+            }
+
+            // ========== DOWNLOAD PARTIAL ZIP ==========
+            function downloadPartialZip() {
+                if (!partialZipBlob) {
+                    log('⚠️ Tidak ada Partial ZIP', 'error');
+                    return;
+                }
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(partialZipBlob);
+                link.download = partialZipFileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                log(`📥 Partial ZIP: ${partialZipFileName} (${extractedFiles.length} file)`, 'success');
+            }
+
+            // ========== CLEAR ==========
+            function clearAll() {
+                logContainer.innerHTML = '';
+                resultSummary.style.display = 'none';
+                progressWrap.style.display = 'none';
+                progressBar.style.width = '0%';
+                extractedFiles = [];
+                failedFiles = [];
+                processedUrls = new Set();
+                totalAttempts = 0;
+                successCount = 0;
+                failCount = 0;
+                priorityCountVal = 0;
+                zipBlob = null;
+                partialZipBlob = null;
+                isPartialReady = false;
+                failedUrls = [];
+                downloadZipBtn.disabled = true;
+                partialDownloadBtn.disabled = true;
+                retryFailedBtn.disabled = true;
+                updateStats();
+                log('🗑️ Dibersihkan', 'info');
+                setStatus('idle', 'Siap');
+            }
+
+            // ========== EVENT LISTENERS ==========
+            extractBtn.addEventListener('click', async () => {
+                const url = urlInput.value.trim();
+                if (!url) {
+                    log('❌ Masukkan URL target', 'error');
+                    return;
+                }
+                await extractWebsite(url);
+            });
+
+            downloadZipBtn.addEventListener('click', downloadZip);
+            partialDownloadBtn.addEventListener('click', downloadPartialZip);
+            clearBtn.addEventListener('click', clearAll);
+            retryFailedBtn.addEventListener('click', retryFailed);
+
+            urlInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') extractBtn.click();
+            });
+
+            // ========== INIT ==========
+            log('☢ Alex Clone Web DOOMSDAY EDITION', 'doomsday');
+            log('💀 Tools: WAF Kill · CF Crush · Rate Smash · Brute Force · XSS · CSRF', 'attack');
+            log('📦 Partial Download: File berhasil tetap tersimpan meskipun ada yang gagal', 'info');
+            log('💡 Masukkan URL target dan klik "Doomsday Clone"', 'info');
+            setStatus('idle', 'Siap');
+            updateStats();
+        })();
+    </script>
+</body>
+</html>
